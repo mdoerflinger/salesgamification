@@ -134,6 +134,7 @@ export interface OpportunityEntity {
   customerName?: string
   _originatingleadid_value?: string
   leadName?: string
+  _ownerid_value?: string
   createdon: string
   modifiedon: string
   actualclosedate?: string
