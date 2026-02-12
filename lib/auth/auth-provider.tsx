@@ -34,7 +34,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     async function init() {
       if (useMock) {
-        // Auto sign-in in mock mode for convenience
+        // Mock mode - don't auto sign-in, wait for user action
+        setIsLoading(false)
+        return
+      }
+
+      // Check if required env vars are present
+      if (!env.clientId() || !env.tenantId() || !env.dataverseResource()) {
+        console.error(
+          '[Auth] Missing required environment variables. Please configure NEXT_PUBLIC_CLIENT_ID, NEXT_PUBLIC_TENANT_ID, and NEXT_PUBLIC_DATAVERSE_RESOURCE'
+        )
         setIsLoading(false)
         return
       }
@@ -64,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (err) {
-        console.error('MSAL initialization error:', err)
+        console.error('[Auth] MSAL initialization error:', err)
       } finally {
         setIsLoading(false)
       }
@@ -82,7 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const msalInstance = msalInstanceRef.current as {
       loginRedirect: (req: unknown) => Promise<void>
     } | null
-    if (!msalInstance) return
+    if (!msalInstance) {
+      console.error('[Auth] MSAL instance not initialized. Cannot sign in.')
+      throw new Error('Authentication not initialized')
+    }
     const { getLoginRequest } = await import('./msal-config')
     await msalInstance.loginRedirect(getLoginRequest())
   }, [useMock])
@@ -109,18 +121,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const msalInstance = msalInstanceRef.current as {
       acquireTokenSilent: (req: unknown) => Promise<{ accessToken: string }>
+      acquireTokenPopup: (req: unknown) => Promise<{ accessToken: string }>
       getAllAccounts: () => Array<{ localAccountId: string }>
     } | null
-    if (!msalInstance) throw new Error('MSAL not initialized')
+    if (!msalInstance) {
+      console.error('[Auth] MSAL instance not initialized')
+      throw new Error('MSAL not initialized')
+    }
     const { getTokenRequest } = await import('./msal-config')
     const accounts = msalInstance.getAllAccounts()
-    if (accounts.length === 0) throw new Error('No authenticated account')
+    if (accounts.length === 0) {
+      console.error('[Auth] No authenticated account found')
+      throw new Error('No authenticated account')
+    }
 
-    const response = await msalInstance.acquireTokenSilent({
-      ...getTokenRequest(),
-      account: accounts[0],
-    })
-    return response.accessToken
+    try {
+      const response = await msalInstance.acquireTokenSilent({
+        ...getTokenRequest(),
+        account: accounts[0],
+      })
+      return response.accessToken
+    } catch (error) {
+      console.error('[Auth] Silent token acquisition failed, trying popup:', error)
+      // Fallback to popup if silent fails
+      const response = await msalInstance.acquireTokenPopup({
+        ...getTokenRequest(),
+        account: accounts[0],
+      })
+      return response.accessToken
+    }
   }, [useMock])
 
   const value = React.useMemo<AuthContextValue>(

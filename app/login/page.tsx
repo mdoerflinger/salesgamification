@@ -12,6 +12,7 @@ export default function LoginPage() {
   const { signIn, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [isSigningIn, setIsSigningIn] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -21,10 +22,18 @@ export default function LoginPage() {
 
   const handleSignIn = async () => {
     setIsSigningIn(true)
+    setError(null)
     try {
       await signIn()
+      // Note: MSAL redirect flow will navigate away before this line is reached
       router.replace(ROUTES.DASHBOARD)
-    } catch {
+    } catch (err) {
+      console.error('[Login] Sign in error:', err)
+      setError(
+        err instanceof Error 
+          ? err.message 
+          : 'Failed to sign in. Please check your environment configuration.'
+      )
       setIsSigningIn(false)
     }
   }
@@ -50,6 +59,11 @@ export default function LoginPage() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 pt-4">
+          {error && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+              {error}
+            </div>
+          )}
           <Button
             onClick={handleSignIn}
             disabled={isSigningIn}

@@ -45,6 +45,6 @@ export const env = {
   speechRegion: () => optional('NEXT_PUBLIC_SPEECH_REGION'),
 
   // Feature flags
-  useMockAuth: () => bool('NEXT_PUBLIC_USE_MOCK_AUTH', true),
-  useMockVoice: () => bool('NEXT_PUBLIC_USE_MOCK_VOICE', true),
+  useMockAuth: () => bool('NEXT_PUBLIC_USE_MOCK_AUTH', false),
+  useMockVoice: () => bool('NEXT_PUBLIC_USE_MOCK_VOICE', false),
 } as const
