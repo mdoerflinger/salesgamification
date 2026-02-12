@@ -51,7 +51,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="flex flex-col items-center gap-4 pb-2">
-          <NavaxLogo variant="brand" width={120} />
+          <NavaxLogo variant="brand" width={180} />
           <div className="text-center">
             <CardTitle className="text-xl font-heading">Sales Lead Coach</CardTitle>
             <CardDescription className="mt-1">
