@@ -40,6 +40,7 @@ let _currentUser: AuthUser | null = null
 
 export const mockAuth = {
   signIn: async (userId?: string): Promise<AuthUser> => {
+    console.log('[v0] mockAuth.signIn called with userId:', userId)
     // Simulate network delay
     await new Promise((r) => setTimeout(r, 500))
     
@@ -48,8 +49,10 @@ export const mockAuth = {
       ? DEMO_USERS.find(u => u.id === userId) || DEMO_USERS[0]
       : DEMO_USERS[0]
     
+    console.log('[v0] mockAuth selected user:', user)
     _isAuthenticated = true
     _currentUser = user
+    console.log('[v0] mockAuth state updated, returning user')
     return user
   },
 

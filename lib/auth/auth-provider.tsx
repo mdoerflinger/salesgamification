@@ -90,9 +90,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [useMock])
 
   const signIn = React.useCallback(async (userId?: string) => {
+    console.log('[v0] AuthProvider.signIn called, useMock:', useMock, 'userId:', userId)
     if (useMock) {
+      console.log('[v0] Using mock auth...')
       const mockUser = await mockAuth.signIn(userId)
+      console.log('[v0] Mock user received:', mockUser)
       setUser(mockUser)
+      console.log('[v0] User state updated')
       return
     }
 
