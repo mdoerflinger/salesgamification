@@ -22,7 +22,7 @@ export interface AuthState {
 
 // ── Voice ──
 
-export type VoiceIntentType = 'create_lead' | 'add_note' | 'schedule_followup' | 'unknown'
+export type VoiceIntentType = 'create_lead' | 'add_note' | 'schedule_followup' | 'change_opportunity_phase' | 'unknown'
 
 export interface VoiceIntent {
   type: VoiceIntentType

@@ -16,8 +16,6 @@ export default function LoginPage() {
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  console.log('[v0] LoginPage state:', { isAuthenticated, isLoading, isConfigured, useMockAuth })
-
   useEffect(() => {
     if (isAuthenticated) {
       router.replace(ROUTES.DASHBOARD)
@@ -25,16 +23,12 @@ export default function LoginPage() {
   }, [isAuthenticated, router])
 
   const handleSignIn = async (userId?: string) => {
-    console.log('[v0] handleSignIn called with userId:', userId)
     setIsSigningIn(true)
     setError(null)
     try {
-      console.log('[v0] Calling signIn...')
       await signIn(userId)
-      console.log('[v0] signIn successful, redirecting...')
       router.replace(ROUTES.DASHBOARD)
     } catch (err) {
-      console.error('[v0] Sign in error:', err)
       setError(
         err instanceof Error 
           ? err.message 

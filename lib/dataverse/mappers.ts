@@ -3,7 +3,11 @@
  */
 import type { LeadEntity, TaskEntity, ActivityEntity } from '@/types/dataverse'
 import type { LeadHealth, HealthIssue, FollowUpItem, FollowUpGroup } from '@/types'
-import { STALE_LEAD_DAYS } from '@/lib/config/constants'
+import {
+  STALE_LEAD_DAYS,
+  LEAD_STATUS_LABELS,
+  OPPORTUNITY_PHASE_LABELS,
+} from '@/lib/config/constants'
 
 /**
  * Compute display name from lead entity.
@@ -92,19 +96,10 @@ export function getFollowUpGroup(dateStr: string): FollowUpGroup {
 }
 
 /**
- * Get human-readable label for lead status code.
+ * Get human-readable label for lead status code (German).
  */
 export function getLeadStatusLabel(statusCode: number): string {
-  const labels: Record<number, string> = {
-    1: 'New',
-    2: 'Contacted',
-    3: 'Qualified',
-    4: 'Lost',
-    5: 'Cannot Contact',
-    6: 'No Longer Interested',
-    7: 'Canceled',
-  }
-  return labels[statusCode] || 'Unknown'
+  return LEAD_STATUS_LABELS[statusCode] || 'Unbekannt'
 }
 
 /**
@@ -113,9 +108,41 @@ export function getLeadStatusLabel(statusCode: number): string {
 export function getLeadStatusVariant(
   statusCode: number
 ): 'default' | 'success' | 'warning' | 'destructive' | 'muted' {
-  if (statusCode === 3) return 'success'
-  if (statusCode === 2) return 'default'
-  if (statusCode === 1) return 'warning'
-  if (statusCode >= 4) return 'destructive'
+  if (statusCode === 3) return 'success'    // Gewonnen
+  if (statusCode === 2) return 'default'    // In Arbeit
+  if (statusCode === 1) return 'warning'    // Neu
+  if (statusCode === 4) return 'destructive' // Verloren
   return 'muted'
+}
+
+/**
+ * Get human-readable label for opportunity phase (German).
+ */
+export function getOpportunityPhaseLabel(phase: number): string {
+  return OPPORTUNITY_PHASE_LABELS[phase] || 'Unbekannt'
+}
+
+/**
+ * Get status badge variant for an opportunity phase.
+ */
+export function getOpportunityPhaseVariant(
+  phase: number
+): 'default' | 'success' | 'warning' | 'destructive' | 'muted' {
+  if (phase === 4) return 'success'     // Gewonnen
+  if (phase === 3) return 'default'     // Angebot
+  if (phase === 2) return 'warning'     // In Verhandlung
+  if (phase === 1) return 'muted'       // Neu
+  return 'muted'
+}
+
+/**
+ * Get human-readable label for opportunity status code.
+ */
+export function getOpportunityStatusLabel(statusCode: number): string {
+  const labels: Record<number, string> = {
+    1: 'Offen',
+    2: 'Gewonnen',
+    3: 'Verloren',
+  }
+  return labels[statusCode] || 'Unbekannt'
 }

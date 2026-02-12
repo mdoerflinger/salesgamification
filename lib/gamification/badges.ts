@@ -46,6 +46,13 @@ export const BADGE_DEFINITIONS: Omit<Badge, 'unlockedAt' | 'progress'>[] = [
     icon: 'Rocket',
     target: 5,
   },
+  {
+    id: 'deal_closer',
+    name: 'Deal Closer',
+    description: '5 Opportunities erfolgreich abgeschlossen',
+    icon: 'Trophy',
+    target: 5,
+  },
 ]
 
 /**
@@ -59,6 +66,7 @@ export function checkBadgeProgress(state: GamificationState): Badge[] {
   const createLeadCount = state.history.filter((e) => e.type === 'create_lead').length
   const followUpCount = state.history.filter((e) => e.type === 'followup_ontime').length
   const fixFieldCount = state.history.filter((e) => e.type === 'fix_missing_field').length
+  const winOpportunityCount = state.history.filter((e) => e.type === 'win_opportunity').length
 
   return BADGE_DEFINITIONS.map((def) => {
     const existing = state.badges.find((b) => b.id === def.id)
@@ -87,6 +95,9 @@ export function checkBadgeProgress(state: GamificationState): Badge[] {
         ).length
         break
       }
+      case 'deal_closer':
+        progress = winOpportunityCount
+        break
     }
 
     const isUnlocked = progress >= def.target

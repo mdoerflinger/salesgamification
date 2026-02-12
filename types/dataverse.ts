@@ -120,6 +120,46 @@ export interface PhoneCallEntity {
   _regardingobjectid_value?: string
 }
 
+// ── Opportunity ──
+
+export interface OpportunityEntity {
+  opportunityid: string
+  name: string
+  description?: string
+  estimatedvalue?: number
+  statuscode: number    // 1=Open, 2=Won, 3=Lost
+  statecode: number     // 0=Open, 1=Won, 2=Lost
+  phase: number         // 1=Neu, 2=In Verhandlung, 3=Angebot, 4=Gewonnen
+  _customerid_value?: string
+  customerName?: string
+  _originatingleadid_value?: string
+  leadName?: string
+  createdon: string
+  modifiedon: string
+  actualclosedate?: string
+  actualvalue?: number
+}
+
+export interface OpportunityCreateDto {
+  name: string
+  description?: string
+  estimatedvalue?: number
+  phase?: number
+  'originatingleadid@odata.bind'?: string
+  'customerid_account@odata.bind'?: string
+}
+
+export interface OpportunityUpdateDto {
+  name?: string
+  description?: string
+  estimatedvalue?: number
+  phase?: number
+  statuscode?: number
+  statecode?: number
+  actualclosedate?: string
+  actualvalue?: number
+}
+
 // ── OData Response Wrappers ──
 
 export interface ODataCollectionResponse<T> {

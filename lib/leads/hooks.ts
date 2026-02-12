@@ -14,10 +14,8 @@ function useDataverseClient() {
   
   return useMemo(() => {
     if (useMockAuth) {
-      console.log('[v0] Using MockDataverseClient')
       return new MockDataverseClient() as unknown as DataverseClient
     }
-    console.log('[v0] Using real DataverseClient')
     return new DataverseClient(acquireToken)
   }, [acquireToken, useMockAuth])
 }

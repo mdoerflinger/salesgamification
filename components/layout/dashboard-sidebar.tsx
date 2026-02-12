@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Users,
+  Target,
   CalendarCheck,
   Settings,
   ChevronLeft,
@@ -24,6 +25,7 @@ import { ROUTES } from '@/lib/config/constants'
 const NAV_ITEMS = [
   { label: 'Today', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
   { label: 'Leads', href: ROUTES.LEADS, icon: Users },
+  { label: 'Opportunities', href: ROUTES.OPPORTUNITIES, icon: Target },
   { label: 'Follow-ups', href: ROUTES.FOLLOW_UPS, icon: CalendarCheck },
   { label: 'Settings', href: ROUTES.SETTINGS, icon: Settings },
 ]

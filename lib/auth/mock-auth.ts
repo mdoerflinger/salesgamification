@@ -1,6 +1,7 @@
 /**
  * Mock auth provider for local development without Entra ID.
  * Returns fake tokens and user info.
+ * Persists auth state in a cookie so it survives navigation/SSR.
  */
 import type { AuthUser } from '@/types'
 
@@ -34,13 +35,44 @@ export const DEMO_USERS: DemoUser[] = [
 ]
 
 const MOCK_TOKEN = 'mock-access-token-for-development'
+const COOKIE_KEY = 'mock-auth-user'
 
-let _isAuthenticated = false
-let _currentUser: AuthUser | null = null
+function setCookie(key: string, value: string) {
+  if (typeof document === 'undefined') return
+  document.cookie = `${key}=${encodeURIComponent(value)};path=/;max-age=${60 * 60 * 24 * 7};SameSite=Lax`
+}
+
+function getCookie(key: string): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(new RegExp(`(?:^|; )${key}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : null
+}
+
+function deleteCookie(key: string) {
+  if (typeof document === 'undefined') return
+  document.cookie = `${key}=;path=/;max-age=0`
+}
+
+/**
+ * Restores the mock auth user from the cookie.
+ * Returns null if no valid session exists.
+ */
+function restoreUser(): AuthUser | null {
+  const raw = getCookie(COOKIE_KEY)
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as AuthUser
+    if (parsed && parsed.id && parsed.email) {
+      return parsed
+    }
+  } catch {
+    deleteCookie(COOKIE_KEY)
+  }
+  return null
+}
 
 export const mockAuth = {
   signIn: async (userId?: string): Promise<AuthUser> => {
-    console.log('[v0] mockAuth.signIn called with userId:', userId)
     // Simulate network delay
     await new Promise((r) => setTimeout(r, 500))
     
@@ -49,35 +81,40 @@ export const mockAuth = {
       ? DEMO_USERS.find(u => u.id === userId) || DEMO_USERS[0]
       : DEMO_USERS[0]
     
-    console.log('[v0] mockAuth selected user:', user)
-    _isAuthenticated = true
-    _currentUser = user
-    console.log('[v0] mockAuth state updated, returning user')
+    // Persist to cookie
+    setCookie(COOKIE_KEY, JSON.stringify(user))
     return user
   },
 
   signOut: async (): Promise<void> => {
     await new Promise((r) => setTimeout(r, 200))
-    _isAuthenticated = false
-    _currentUser = null
+    deleteCookie(COOKIE_KEY)
   },
 
   acquireTokenSilent: async (): Promise<string> => {
-    if (!_isAuthenticated) {
+    const user = restoreUser()
+    if (!user) {
       throw new Error('Not authenticated')
     }
     return MOCK_TOKEN
   },
 
   getAccount: (): AuthUser | null => {
-    return _currentUser
+    return restoreUser()
   },
 
   isAuthenticated: (): boolean => {
-    return _isAuthenticated
+    return !!restoreUser()
   },
   
   getDemoUsers: (): DemoUser[] => {
     return DEMO_USERS
+  },
+
+  /**
+   * Restores the user from the cookie (used by AuthProvider on mount).
+   */
+  restoreSession: (): AuthUser | null => {
+    return restoreUser()
   },
 }

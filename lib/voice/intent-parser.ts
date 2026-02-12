@@ -10,6 +10,19 @@ interface IntentPattern {
   extract: (match: RegExpMatchArray, raw: string) => Record<string, string>
 }
 
+const PHASE_NAME_MAP: Record<string, number> = {
+  'neu': 1,
+  'in verhandlung': 2,
+  'verhandlung': 2,
+  'angebot': 3,
+  'gewonnen': 4,
+}
+
+function resolvePhase(input: string): number | null {
+  const lower = input.toLowerCase().trim()
+  return PHASE_NAME_MAP[lower] ?? null
+}
+
 const INTENT_PATTERNS: IntentPattern[] = [
   {
     type: 'create_lead',
@@ -96,6 +109,27 @@ const INTENT_PATTERNS: IntentPattern[] = [
       const subjectMatch = raw.replace(/^.*?follow[- ]?up\s*/i, '').trim()
       data.subject = subjectMatch || `Follow-up ${data.channel || 'call'}`
 
+      return data
+    },
+  },
+  {
+    type: 'change_opportunity_phase',
+    patterns: [
+      /(?:advance|move|set)\s+(?:the\s+)?opportunity\s+(?:to|phase)\s+(.+)/i,
+      /(?:opportunity|opp)\s+(?:to|nach|auf)\s+(.+)/i,
+      /phase\s+(?:aendern|wechseln|setzen)\s+(?:auf|nach|zu)\s+(.+)/i,
+    ],
+    extract: (_match, raw) => {
+      const data: Record<string, string> = {}
+      const phaseMatch = raw.match(/(?:to|nach|auf|zu)\s+(.+?)$/i)
+      if (phaseMatch) {
+        const phaseName = phaseMatch[1].trim()
+        const phaseNumber = resolvePhase(phaseName)
+        if (phaseNumber !== null) {
+          data.phase = String(phaseNumber)
+          data.phaseName = phaseName
+        }
+      }
       return data
     },
   },

@@ -42,7 +42,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     async function init() {
       if (useMock) {
-        // Mock mode - don't auto sign-in, wait for user action
+        // Mock mode - restore session from cookie if available
+        const restored = mockAuth.restoreSession()
+        if (restored) {
+          setUser(restored)
+        }
         setIsLoading(false)
         return
       }
@@ -90,13 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [useMock])
 
   const signIn = React.useCallback(async (userId?: string) => {
-    console.log('[v0] AuthProvider.signIn called, useMock:', useMock, 'userId:', userId)
     if (useMock) {
-      console.log('[v0] Using mock auth...')
       const mockUser = await mockAuth.signIn(userId)
-      console.log('[v0] Mock user received:', mockUser)
       setUser(mockUser)
-      console.log('[v0] User state updated')
       return
     }
 

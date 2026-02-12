@@ -24,6 +24,8 @@ export type XPEventType =
   | 'followup_ontime'
   | 'fix_missing_field'
   | 'daily_streak'
+  | 'win_opportunity'
+  | 'advance_phase'
 
 export interface Badge {
   id: string
