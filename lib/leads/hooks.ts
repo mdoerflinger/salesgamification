@@ -4,13 +4,22 @@ import useSWR from 'swr'
 import useSWRMutation from 'swr/mutation'
 import { useCallback, useMemo } from 'react'
 import { DataverseClient } from '@/lib/dataverse/client'
+import { MockDataverseClient } from '@/lib/dataverse/mock-client'
 import { useAuth } from '@/lib/auth/use-auth'
 import { enrichLeadPayload } from './service'
 import type { LeadCreateDto, LeadUpdateDto, LeadEntity } from '@/types/dataverse'
 
 function useDataverseClient() {
-  const { acquireToken } = useAuth()
-  return useMemo(() => new DataverseClient(acquireToken), [acquireToken])
+  const { acquireToken, useMockAuth } = useAuth()
+  
+  return useMemo(() => {
+    if (useMockAuth) {
+      console.log('[v0] Using MockDataverseClient')
+      return new MockDataverseClient() as unknown as DataverseClient
+    }
+    console.log('[v0] Using real DataverseClient')
+    return new DataverseClient(acquireToken)
+  }, [acquireToken, useMockAuth])
 }
 
 /**
