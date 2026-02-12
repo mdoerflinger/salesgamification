@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { LeadForm } from '@/components/leads/lead-form'
 import { VoiceDialog } from '@/components/voice/voice-dialog'
+import { useCreateLead } from '@/lib/leads/hooks'
 import { useGamification } from '@/lib/gamification/use-gamification'
 import { ROUTES } from '@/lib/config/constants'
 import type { LeadCreateDto } from '@/types/dataverse'
@@ -21,33 +22,34 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
-import Link from 'next/link'
+import { mutate } from 'swr'
 
 export default function NewLeadPage() {
   const router = useRouter()
+  const { createLead, isCreating } = useCreateLead()
   const { awardXP } = useGamification()
   const [voiceOpen, setVoiceOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [voiceData, setVoiceData] = useState<Partial<LeadCreateDto>>({})
   const [showFollowUpPrompt, setShowFollowUpPrompt] = useState(false)
   const [createdLeadId, setCreatedLeadId] = useState<string | null>(null)
 
   const handleSubmit = async (data: LeadCreateDto) => {
-    setIsSubmitting(true)
     try {
-      // In production, this calls useCreateLead().createLead(data)
-      // For scaffold, simulate success
-      await new Promise((r) => setTimeout(r, 500))
-
-      const fakeId = `lead-${Date.now()}`
-      setCreatedLeadId(fakeId)
+      console.log('[v0] Creating lead with data:', data)
+      const result = await createLead(data)
+      console.log('[v0] Lead created successfully:', result)
+      
+      setCreatedLeadId(result.leadid)
+      
+      // Invalidate leads cache to refresh the list
+      mutate((key) => typeof key === 'string' && key.startsWith('leads'))
+      
       awardXP('create_lead', `Created lead: ${data.companyname}`)
       toast.success('Lead created successfully!')
       setShowFollowUpPrompt(true)
-    } catch {
+    } catch (err) {
+      console.error('[v0] Failed to create lead:', err)
       toast.error('Failed to create lead')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -92,7 +94,7 @@ export default function NewLeadPage() {
             <LeadForm
               initialData={voiceData}
               onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
+              isSubmitting={isCreating}
               submitLabel="Create Lead"
             />
           </CardContent>

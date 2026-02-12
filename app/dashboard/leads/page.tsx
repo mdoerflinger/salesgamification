@@ -8,82 +8,16 @@ import { SearchInput } from '@/components/ds/search-input'
 import { EmptyState } from '@/components/ds/empty-state'
 import { Button } from '@/components/ui/button'
 import { LeadCard } from '@/components/leads/lead-card'
+import { useLeads } from '@/lib/leads/hooks'
 import { ROUTES } from '@/lib/config/constants'
-import type { LeadEntity } from '@/types/dataverse'
-
-// Demo leads for initial scaffold
-const DEMO_LEADS: LeadEntity[] = [
-  {
-    leadid: 'lead-1',
-    fullname: 'Anna Mueller',
-    firstname: 'Anna',
-    lastname: 'Mueller',
-    companyname: 'TechVentures GmbH',
-    emailaddress1: 'anna@techventures.de',
-    mobilephone: '+49 151 1234567',
-    jobtitle: 'CTO',
-    leadsourcecode: 8,
-    statuscode: 2,
-    statecode: 0,
-    subject: 'ERP Migration Interest',
-    createdon: new Date(Date.now() - 5 * 86400000).toISOString(),
-    modifiedon: new Date(Date.now() - 1 * 86400000).toISOString(),
-  },
-  {
-    leadid: 'lead-2',
-    fullname: 'Thomas Weber',
-    firstname: 'Thomas',
-    lastname: 'Weber',
-    companyname: 'DataFlow AG',
-    emailaddress1: '',
-    mobilephone: '+49 170 9876543',
-    jobtitle: 'Head of IT',
-    leadsourcecode: 7,
-    statuscode: 1,
-    statecode: 0,
-    subject: 'Cloud Migration',
-    createdon: new Date(Date.now() - 2 * 86400000).toISOString(),
-    modifiedon: new Date(Date.now() - 2 * 86400000).toISOString(),
-  },
-  {
-    leadid: 'lead-3',
-    fullname: 'Sarah Koch',
-    firstname: 'Sarah',
-    lastname: 'Koch',
-    companyname: 'CloudFirst Inc',
-    emailaddress1: 'sarah@cloudfirst.com',
-    mobilephone: '',
-    jobtitle: 'VP Engineering',
-    leadsourcecode: 3,
-    statuscode: 3,
-    statecode: 0,
-    subject: 'Dynamics 365 Implementation',
-    createdon: new Date(Date.now() - 10 * 86400000).toISOString(),
-    modifiedon: new Date(Date.now() - 3 * 86400000).toISOString(),
-  },
-  {
-    leadid: 'lead-4',
-    fullname: 'Michael Braun',
-    firstname: 'Michael',
-    lastname: 'Braun',
-    companyname: 'InnoSys Solutions',
-    emailaddress1: 'michael@innosys.at',
-    mobilephone: '+43 664 1112233',
-    jobtitle: 'Managing Director',
-    leadsourcecode: 4,
-    statuscode: 1,
-    statecode: 0,
-    subject: 'Business Central',
-    createdon: new Date(Date.now() - 20 * 86400000).toISOString(),
-    modifiedon: new Date(Date.now() - 18 * 86400000).toISOString(),
-  },
-]
 
 export default function LeadsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
 
-  const filteredLeads = DEMO_LEADS.filter((lead) => {
+  const { leads, isLoading, error } = useLeads({ search: searchQuery })
+
+  const filteredLeads = leads.filter((lead) => {
     if (!searchQuery) return true
     const query = searchQuery.toLowerCase()
     return (
@@ -139,8 +73,22 @@ export default function LeadsPage() {
         </div>
       </div>
 
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      )}
+
+      {/* Error state */}
+      {error && (
+        <div className="rounded-md bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive">
+          Failed to load leads. Please try again.
+        </div>
+      )}
+
       {/* Leads list/grid */}
-      {filteredLeads.length > 0 ? (
+      {!isLoading && !error && filteredLeads.length > 0 ? (
         <div
           className={
             viewMode === 'grid'
@@ -152,7 +100,7 @@ export default function LeadsPage() {
             <LeadCard key={lead.leadid} lead={lead} />
           ))}
         </div>
-      ) : (
+      ) : !isLoading && !error ? (
         <EmptyState
           title="No leads found"
           description={
@@ -169,7 +117,7 @@ export default function LeadsPage() {
             ) : undefined
           }
         />
-      )}
+      ) : null}
     </div>
   )
 }
