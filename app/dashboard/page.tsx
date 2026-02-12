@@ -2,18 +2,24 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Mic, CalendarCheck, Users, Sparkles, ArrowRight } from 'lucide-react'
+import { Plus, Mic, CalendarCheck, Users, Sparkles, ArrowRight, TrendingUp } from 'lucide-react'
 import { PageHeader } from '@/components/ds/page-header'
 import { StatCard } from '@/components/ds/stat-card'
 import { EmptyState } from '@/components/ds/empty-state'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { XPBar } from '@/components/gamification/xp-bar'
 import { StreakCounter } from '@/components/gamification/streak-counter'
 import { BadgeDisplay } from '@/components/gamification/badge-display'
 import { FollowUpCard } from '@/components/follow-ups/follow-up-card'
 import { VoiceDialog } from '@/components/voice/voice-dialog'
+import { LeadPipelineChart } from '@/components/dashboard/lead-pipeline-chart'
+import { ActivityChart } from '@/components/dashboard/activity-chart'
+import { LeadSourceChart } from '@/components/dashboard/lead-source-chart'
+import { PerformanceMetrics } from '@/components/dashboard/performance-metrics'
 import { useGamification } from '@/lib/gamification/use-gamification'
+import { useLeads } from '@/lib/leads/hooks'
 import { ROUTES } from '@/lib/config/constants'
 import type { FollowUpItem, VoiceIntent } from '@/types'
 
@@ -57,9 +63,18 @@ const DEMO_FOLLOW_UPS: FollowUpItem[] = [
 export default function TodayPage() {
   const [voiceOpen, setVoiceOpen] = useState(false)
   const { awardXP, xp, level, streakDays } = useGamification()
+  const { leads, isLoading: leadsLoading } = useLeads()
 
   const overdueItems = DEMO_FOLLOW_UPS.filter((f) => f.group === 'overdue')
   const todayItems = DEMO_FOLLOW_UPS.filter((f) => f.group === 'today')
+
+  // Calculate metrics from real lead data
+  const totalLeads = leads.length
+  const newLeadsThisWeek = leads.filter(
+    (l) => new Date(l.createdon) > new Date(Date.now() - 7 * 86400000)
+  ).length
+  const qualifiedLeads = leads.filter((l) => l.statuscode === 2).length
+  const conversionRate = totalLeads > 0 ? ((qualifiedLeads / totalLeads) * 100).toFixed(1) : '0'
 
   const handleComplete = (id: string) => {
     awardXP('followup_ontime', 'Completed follow-up')
@@ -98,20 +113,27 @@ export default function TodayPage() {
       />
 
       {/* Quick Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <StatCard
+          label="Total Leads"
+          value={leadsLoading ? '...' : totalLeads}
+          trend="neutral"
+          description={`${newLeadsThisWeek} new this week`}
+          icon={<Users />}
+        />
+        <StatCard
+          label="Conversion Rate"
+          value={leadsLoading ? '...' : `${conversionRate}%`}
+          trend={parseFloat(conversionRate) > 20 ? 'up' : 'neutral'}
+          description="Qualified leads"
+          icon={<TrendingUp />}
+        />
         <StatCard
           label="Total XP"
           value={xp}
           trend="up"
           description={`Level ${level}`}
           icon={<Sparkles />}
-        />
-        <StatCard
-          label="Streak"
-          value={`${streakDays}d`}
-          trend={streakDays > 0 ? 'up' : 'neutral'}
-          description="Daily activity"
-          icon={<CalendarCheck />}
         />
         <StatCard
           label="Due Today"
@@ -125,10 +147,89 @@ export default function TodayPage() {
           value={overdueItems.length}
           trend={overdueItems.length > 0 ? 'down' : 'neutral'}
           description="Needs attention"
-          icon={<Users />}
+          icon={<CalendarCheck />}
         />
       </div>
 
+      {/* Analytics & Charts */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-6 space-y-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <LeadPipelineChart leads={leads} />
+            <LeadSourceChart leads={leads} />
+          </div>
+          <PerformanceMetrics leads={leads} />
+        </TabsContent>
+
+        <TabsContent value="pipeline" className="mt-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <LeadPipelineChart leads={leads} />
+            <Card>
+              <CardHeader>
+                <CardTitle>Pipeline Health</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">New Leads</span>
+                      <span className="font-medium">{leads.filter(l => l.statuscode === 1).length}</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-muted">
+                      <div
+                        className="h-2 rounded-full bg-blue-500"
+                        style={{
+                          width: `${totalLeads > 0 ? (leads.filter(l => l.statuscode === 1).length / totalLeads) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Contacted</span>
+                      <span className="font-medium">{leads.filter(l => l.statuscode === 2).length}</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-muted">
+                      <div
+                        className="h-2 rounded-full bg-yellow-500"
+                        style={{
+                          width: `${totalLeads > 0 ? (leads.filter(l => l.statuscode === 2).length / totalLeads) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Qualified</span>
+                      <span className="font-medium">{leads.filter(l => l.statuscode === 3).length}</span>
+                    </div>
+                    <div className="mt-2 h-2 rounded-full bg-muted">
+                      <div
+                        className="h-2 rounded-full bg-green-500"
+                        style={{
+                          width: `${totalLeads > 0 ? (leads.filter(l => l.statuscode === 3).length / totalLeads) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="activity" className="mt-6">
+          <ActivityChart leads={leads} />
+        </TabsContent>
+      </Tabs>
+
+      {/* Follow-ups & Gamification */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Follow-ups */}
         <div className="lg:col-span-2">
