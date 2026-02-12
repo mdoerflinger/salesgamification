@@ -1,0 +1,83 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/use-auth'
+import { NavaxLogo } from '@/components/ds/navax-logo'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ROUTES } from '@/lib/config/constants'
+import { useEffect, useState } from 'react'
+
+export default function LoginPage() {
+  const { signIn, isAuthenticated, isLoading } = useAuth()
+  const router = useRouter()
+  const [isSigningIn, setIsSigningIn] = useState(false)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(ROUTES.DASHBOARD)
+    }
+  }, [isAuthenticated, router])
+
+  const handleSignIn = async () => {
+    setIsSigningIn(true)
+    try {
+      await signIn()
+      router.replace(ROUTES.DASHBOARD)
+    } catch {
+      setIsSigningIn(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="flex flex-col items-center gap-4 pb-2">
+          <NavaxLogo variant="brand" width={120} />
+          <div className="text-center">
+            <CardTitle className="text-xl font-heading">Sales Lead Coach</CardTitle>
+            <CardDescription className="mt-1">
+              Sign in to manage your leads and follow-ups
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 pt-4">
+          <Button
+            onClick={handleSignIn}
+            disabled={isSigningIn}
+            className="w-full"
+            size="lg"
+          >
+            {isSigningIn ? (
+              <>
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 21 21" className="mr-2 h-5 w-5" aria-hidden="true">
+                  <rect x="1" y="1" width="9" height="9" fill="hsl(var(--primary-foreground))" />
+                  <rect x="11" y="1" width="9" height="9" fill="hsl(var(--primary-foreground))" />
+                  <rect x="1" y="11" width="9" height="9" fill="hsl(var(--primary-foreground))" />
+                  <rect x="11" y="11" width="9" height="9" fill="hsl(var(--primary-foreground))" />
+                </svg>
+                Sign in with Microsoft
+              </>
+            )}
+          </Button>
+          <p className="text-center text-xs text-muted-foreground">
+            Uses Microsoft Entra ID for secure authentication
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
