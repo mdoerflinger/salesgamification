@@ -9,7 +9,7 @@ import { ROUTES } from '@/lib/config/constants'
 import { useEffect, useState } from 'react'
 
 export default function LoginPage() {
-  const { signIn, isAuthenticated, isLoading } = useAuth()
+  const { signIn, isAuthenticated, isLoading, isConfigured, useMockAuth } = useAuth()
   const router = useRouter()
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,6 +59,16 @@ export default function LoginPage() {
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 pt-4">
+          {!isConfigured && (
+            <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 p-3 text-sm text-yellow-700 dark:text-yellow-400">
+              <p className="font-medium mb-1">⚠️ Configuration Required</p>
+              <p className="text-xs">
+                {useMockAuth 
+                  ? 'Running in mock mode. Enable real authentication by setting up environment variables.'
+                  : 'Authentication not configured. Please set NEXT_PUBLIC_CLIENT_ID, NEXT_PUBLIC_TENANT_ID, and NEXT_PUBLIC_DATAVERSE_RESOURCE environment variables, or set NEXT_PUBLIC_USE_MOCK_AUTH=true for development.'}
+              </p>
+            </div>
+          )}
           {error && (
             <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
               {error}
@@ -83,12 +93,14 @@ export default function LoginPage() {
                   <rect x="1" y="11" width="9" height="9" fill="hsl(var(--primary-foreground))" />
                   <rect x="11" y="11" width="9" height="9" fill="hsl(var(--primary-foreground))" />
                 </svg>
-                Sign in with Microsoft
+                {useMockAuth ? 'Sign in (Mock Mode)' : 'Sign in with Microsoft'}
               </>
             )}
           </Button>
           <p className="text-center text-xs text-muted-foreground">
-            Uses Microsoft Entra ID for secure authentication
+            {useMockAuth 
+              ? 'Development mode - no real authentication required'
+              : 'Uses Microsoft Entra ID for secure authentication'}
           </p>
         </CardContent>
       </Card>

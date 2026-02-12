@@ -12,6 +12,8 @@ interface AuthContextValue {
   signIn: () => Promise<void>
   signOut: () => Promise<void>
   acquireToken: () => Promise<string>
+  isConfigured: boolean
+  useMockAuth: boolean
 }
 
 const AuthContext = React.createContext<AuthContextValue | null>(null)
@@ -29,6 +31,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = React.useState(true)
   const msalInstanceRef = React.useRef<unknown>(null)
   const useMock = env.useMockAuth()
+  
+  // Check if real auth is properly configured
+  const isConfigured = React.useMemo(() => {
+    if (useMock) return true // Mock mode is always "configured"
+    return !!(env.clientId() && env.tenantId() && env.dataverseResource())
+  }, [useMock])
 
   // Initialize on mount
   React.useEffect(() => {
@@ -41,8 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Check if required env vars are present
       if (!env.clientId() || !env.tenantId() || !env.dataverseResource()) {
-        console.error(
-          '[Auth] Missing required environment variables. Please configure NEXT_PUBLIC_CLIENT_ID, NEXT_PUBLIC_TENANT_ID, and NEXT_PUBLIC_DATAVERSE_RESOURCE'
+        console.warn(
+          '[Auth] Environment variables not configured. Set NEXT_PUBLIC_CLIENT_ID, NEXT_PUBLIC_TENANT_ID, and NEXT_PUBLIC_DATAVERSE_RESOURCE, or enable mock mode with NEXT_PUBLIC_USE_MOCK_AUTH=true'
         )
         setIsLoading(false)
         return
@@ -160,8 +168,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signOut,
       acquireToken,
+      isConfigured,
+      useMockAuth: useMock,
     }),
-    [user, isLoading, signIn, signOut, acquireToken]
+    [user, isLoading, signIn, signOut, acquireToken, isConfigured, useMock]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
