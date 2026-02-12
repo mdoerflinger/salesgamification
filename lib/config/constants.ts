@@ -7,6 +7,8 @@ export const XP_CREATE_LEAD = 10
 export const XP_FOLLOWUP_ONTIME = 5
 export const XP_FIX_MISSING_FIELD = 3
 export const XP_DAILY_STREAK = 1
+export const XP_WIN_OPPORTUNITY = 25
+export const XP_ADVANCE_PHASE = 5
 
 // ── Level Thresholds ──
 export const XP_PER_LEVEL = 100
@@ -41,13 +43,38 @@ export const LEAD_SOURCE_OPTIONS = [
 
 // ── Lead Status Codes ──
 export const LEAD_STATUS = {
-  NEW: 1,
-  CONTACTED: 2,
-  QUALIFIED: 3,
-  LOST: 4,
-  CANNOT_CONTACT: 5,
-  NO_LONGER_INTERESTED: 6,
-  CANCELED: 7,
+  NEU: 1,
+  IN_ARBEIT: 2,
+  GEWONNEN: 3,
+  VERLOREN: 4,
+} as const
+
+export const LEAD_STATUS_LABELS: Record<number, string> = {
+  1: 'Neu',
+  2: 'In Arbeit',
+  3: 'Gewonnen',
+  4: 'Verloren',
+}
+
+// ── Opportunity Phases ──
+export const OPPORTUNITY_PHASES = {
+  NEU: 1,
+  IN_VERHANDLUNG: 2,
+  ANGEBOT: 3,
+  GEWONNEN: 4,
+} as const
+
+export const OPPORTUNITY_PHASE_LABELS: Record<number, string> = {
+  1: 'Neu',
+  2: 'In Verhandlung',
+  3: 'Angebot',
+  4: 'Gewonnen',
+}
+
+export const OPPORTUNITY_STATUS = {
+  OPEN: 1,
+  WON: 2,
+  LOST: 3,
 } as const
 
 // ── Task Priority ──
@@ -68,6 +95,8 @@ export const ROUTES = {
   LEADS: '/dashboard/leads',
   LEADS_NEW: '/dashboard/leads/new',
   LEAD_DETAIL: (id: string) => `/dashboard/leads/${id}`,
+  OPPORTUNITIES: '/dashboard/opportunities',
+  OPPORTUNITY_DETAIL: (id: string) => `/dashboard/opportunities/${id}` as const,
   FOLLOW_UPS: '/dashboard/follow-ups',
   SETTINGS: '/dashboard/settings',
 } as const

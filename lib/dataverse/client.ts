@@ -9,6 +9,9 @@ import type {
   TaskEntity,
   TaskCreateDto,
   ActivityEntity,
+  OpportunityEntity,
+  OpportunityCreateDto,
+  OpportunityUpdateDto,
   ODataCollectionResponse,
 } from '@/types/dataverse'
 import { env } from '@/lib/config/env'
@@ -248,5 +251,91 @@ export class DataverseClient {
     return this.request<ODataCollectionResponse<ActivityEntity>>(
       `/activitypointers${query}`
     )
+  }
+
+  // ── Opportunities ──
+
+  async createOpportunity(payload: OpportunityCreateDto): Promise<OpportunityEntity> {
+    return this.request<OpportunityEntity>('/opportunities', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  }
+
+  async updateOpportunity(id: string, patch: OpportunityUpdateDto): Promise<void> {
+    return this.request<void>(`/opportunities(${id})`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    })
+  }
+
+  async getOpportunity(id: string): Promise<OpportunityEntity> {
+    const query = new RequestBuilder()
+      .select(
+        'opportunityid', 'name', 'description', 'estimatedvalue',
+        'statuscode', 'statecode', 'createdon', 'modifiedon',
+        'actualclosedate', 'actualvalue',
+        '_customerid_value', '_originatingleadid_value'
+      )
+      .build()
+
+    return this.request<OpportunityEntity>(`/opportunities(${id})${query}`)
+  }
+
+  async getOpportunities(opts: {
+    top?: number
+    search?: string
+    filter?: string
+    orderBy?: string
+  } = {}): Promise<ODataCollectionResponse<OpportunityEntity>> {
+    const builder = new RequestBuilder()
+      .select(
+        'opportunityid', 'name', 'description', 'estimatedvalue',
+        'statuscode', 'statecode', 'createdon', 'modifiedon',
+        'actualclosedate', 'actualvalue',
+        '_customerid_value', '_originatingleadid_value'
+      )
+      .top(opts.top ?? DEFAULT_PAGE_SIZE)
+      .orderBy(opts.orderBy ?? 'createdon', 'desc')
+
+    if (opts.filter) builder.filter(opts.filter)
+    if (opts.search) {
+      builder.filter(
+        `contains(name,'${opts.search}') or contains(description,'${opts.search}')`
+      )
+    }
+
+    return this.request<ODataCollectionResponse<OpportunityEntity>>(
+      `/opportunities${builder.build()}`
+    )
+  }
+
+  async setOpportunityPhase(id: string, phase: number): Promise<void> {
+    const patch: OpportunityUpdateDto = { phase }
+    // Auto-close as won if phase 4
+    if (phase === 4) {
+      patch.statuscode = 2
+      patch.statecode = 1
+      patch.actualclosedate = new Date().toISOString()
+    }
+    return this.updateOpportunity(id, patch)
+  }
+
+  async closeOpportunityAsWon(id: string, actualValue?: number): Promise<void> {
+    return this.updateOpportunity(id, {
+      phase: 4,
+      statuscode: 2,
+      statecode: 1,
+      actualclosedate: new Date().toISOString(),
+      actualvalue: actualValue,
+    })
+  }
+
+  async closeOpportunityAsLost(id: string): Promise<void> {
+    return this.updateOpportunity(id, {
+      statuscode: 3,
+      statecode: 2,
+      actualclosedate: new Date().toISOString(),
+    })
   }
 }

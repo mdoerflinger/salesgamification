@@ -18,8 +18,11 @@ import { LeadPipelineChart } from '@/components/dashboard/lead-pipeline-chart'
 import { ActivityChart } from '@/components/dashboard/activity-chart'
 import { LeadSourceChart } from '@/components/dashboard/lead-source-chart'
 import { PerformanceMetrics } from '@/components/dashboard/performance-metrics'
+import { OpportunityPipelineChart } from '@/components/dashboard/opportunity-pipeline-chart'
+import { OpportunityValueChart } from '@/components/dashboard/opportunity-value-chart'
 import { useGamification } from '@/lib/gamification/use-gamification'
 import { useLeads } from '@/lib/leads/hooks'
+import { useOpportunities } from '@/lib/opportunities/hooks'
 import { ROUTES } from '@/lib/config/constants'
 import type { FollowUpItem, VoiceIntent } from '@/types'
 
@@ -64,6 +67,7 @@ export default function TodayPage() {
   const [voiceOpen, setVoiceOpen] = useState(false)
   const { awardXP, xp, level, streakDays } = useGamification()
   const { leads, isLoading: leadsLoading } = useLeads()
+  const { opportunities } = useOpportunities()
 
   const overdueItems = DEMO_FOLLOW_UPS.filter((f) => f.group === 'overdue')
   const todayItems = DEMO_FOLLOW_UPS.filter((f) => f.group === 'today')
@@ -157,6 +161,7 @@ export default function TodayPage() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-6 space-y-6">
@@ -226,6 +231,13 @@ export default function TodayPage() {
 
         <TabsContent value="activity" className="mt-6">
           <ActivityChart leads={leads} />
+        </TabsContent>
+
+        <TabsContent value="opportunities" className="mt-6">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <OpportunityPipelineChart opportunities={opportunities} />
+            <OpportunityValueChart opportunities={opportunities} />
+          </div>
         </TabsContent>
       </Tabs>
 

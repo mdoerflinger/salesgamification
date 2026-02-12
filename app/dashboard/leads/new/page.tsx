@@ -35,9 +35,7 @@ export default function NewLeadPage() {
 
   const handleSubmit = async (data: LeadCreateDto) => {
     try {
-      console.log('[v0] Creating lead with data:', data)
       const result = await createLead(data)
-      console.log('[v0] Lead created successfully:', result)
       
       setCreatedLeadId(result.leadid)
       

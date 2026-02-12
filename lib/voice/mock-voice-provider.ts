@@ -9,6 +9,8 @@ const MOCK_TRANSCRIPTS = [
   'Schedule a follow-up call for Friday',
   'Create lead Sarah Johnson from TechStart Inc email sarah@techstart.com',
   'Set up a meeting with the new prospect next Tuesday',
+  'Advance opportunity to Angebot',
+  'Move opportunity to Verhandlung',
 ]
 
 export class MockVoiceProvider implements VoiceProvider {
