@@ -9,7 +9,7 @@ interface AuthContextValue {
   user: AuthUser | null
   isAuthenticated: boolean
   isLoading: boolean
-  signIn: () => Promise<void>
+  signIn: (userId?: string) => Promise<void>
   signOut: () => Promise<void>
   acquireToken: () => Promise<string>
   isConfigured: boolean
@@ -89,9 +89,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     init()
   }, [useMock])
 
-  const signIn = React.useCallback(async () => {
+  const signIn = React.useCallback(async (userId?: string) => {
     if (useMock) {
-      const mockUser = await mockAuth.signIn()
+      const mockUser = await mockAuth.signIn(userId)
       setUser(mockUser)
       return
     }
